@@ -94,6 +94,7 @@ public class WebQQClient implements QQClient, QQContext {
         this.modules.put(QQModule.Type.CHAT, new ChatModule());
         this.modules.put(QQModule.Type.DISCUZ, new DiscuzModule());
         this.modules.put(QQModule.Type.EMAIL, new EmailModule());
+        this.modules.put(QQModule.Type.UTIL, new UtilModule());
 
         this.services.put(QQService.Type.HTTP, new ApacheHttpService());
 
@@ -139,7 +140,6 @@ public class WebQQClient implements QQClient, QQContext {
     public void setHttpUserAgent(String userAgent) {
         HttpService http = getSerivce(QQService.Type.HTTP);
         http.setUserAgent(userAgent);
-
     }
 
     /**
@@ -153,6 +153,11 @@ public class WebQQClient implements QQClient, QQContext {
         HttpService http = getSerivce(QQService.Type.HTTP);
         http.setHttpProxy(proxyType, proxyHost, proxyPort,
                 proxyAuthUser, proxyAuthPassword);
+    }
+    
+    public void httpGet(String url, Map<String, String> params, QQActionListener listener) {
+    	UtilModule m = (UtilModule)this.getModule(QQModule.Type.UTIL);
+    	m.httpGet(url, params, listener);
     }
 
     /**

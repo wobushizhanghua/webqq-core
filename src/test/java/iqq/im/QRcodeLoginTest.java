@@ -12,8 +12,13 @@ import iqq.im.event.QQActionEvent;
 import iqq.im.event.QQNotifyEvent;
 
 import javax.imageio.ImageIO;
+
+import org.json.JSONObject;
+
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 使用二维码登录WebQQ
@@ -23,7 +28,7 @@ import java.io.File;
  */
 public class QRcodeLoginTest {
 
-    static QQClient mClient = new WebQQClient(new QQNotifyListener() {
+    static WebQQClient mClient = new WebQQClient(new QQNotifyListener() {
         @Override
         public void onNotifyEvent(QQNotifyEvent event) {
             System.out.println(event);
@@ -88,47 +93,100 @@ public class QRcodeLoginTest {
     }
 
     private static void revMsg(QQMsg revMsg) {
+    	
         switch (revMsg.getType()) {
             case BUDDY_MSG:
-                sendMsg(revMsg.getFrom());
+            case SESSION_MSG:
+                sendMsg(revMsg,revMsg.getFrom());
                 break;
             case GROUP_MSG:
-                sendMsg(revMsg.getGroup());
+                sendMsg(revMsg, revMsg.getGroup());
                 break;
             case DISCUZ_MSG:
-                sendDiscuz(revMsg.getDiscuz());
+                sendDiscuz(revMsg,revMsg.getDiscuz());
         }
     }
 
-    public static void sendMsg(QQUser user) {
+    public static void sendMsg(final QQMsg revMsg, final QQUser user) {
         System.out.println("sendMsg " + user);
-
-        // 组装QQ消息发送回去
-        QQMsg sendMsg = new QQMsg();
-        sendMsg.setTo(user);                                // QQ好友UIN
-        sendMsg.setType(QQMsg.Type.BUDDY_MSG);              // 发送类型为好友
-        // QQ内容
-        sendMsg.addContentItem(new TextItem("hello from iqq: https://github.com/im-qq")); // 添加文本内容
-        sendMsg.addContentItem(new FaceItem(74));           // QQ id为0的表情
-        sendMsg.addContentItem(new FontItem());             // 使用默认字体
-        mClient.sendMsg(sendMsg, null);                     // 调用接口发送消息
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("type", "buddy");
+        params.put("nickname", user.getNickname());
+        params.put("qq", Long.toString(user.getQQ()));
+        params.put("msg", revMsg.getText());
+        mClient.httpGet("http://192.168.2.122/webqq/recv.php", params, new QQActionListener() {
+			
+			@Override
+			public void onActionEvent(QQActionEvent event) {
+				// TODO Auto-generated method stub
+				System.out.println(event.getType());
+				System.out.println(event.getTarget());
+				if (!event.getType().equals(QQActionEvent.Type.EVT_OK)) {
+					return;
+				}
+				try {
+					String response = event.getTarget().toString();
+					System.out.println(response);
+					JSONObject obj = new JSONObject(response);
+					if (obj.getString("cmd").equals("send_buddy")) {
+				        // 组装QQ消息发送回去
+				        QQMsg sendMsg = new QQMsg();
+				        sendMsg.setTo(user);                                // QQ好友UIN
+				        sendMsg.setType(revMsg.getType());              // 发送类型为好友
+				        // QQ内容
+				        sendMsg.addContentItem(new TextItem(obj.getString("msg"))); // 添加文本内容
+				        sendMsg.addContentItem(new FaceItem(74));           // QQ id为0的表情
+				        sendMsg.addContentItem(new FontItem());             // 使用默认字体
+				        mClient.sendMsg(sendMsg, null);                     // 调用接口发送消息
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
     }
 
-    public static void sendMsg(QQGroup group) {
+    public static void sendMsg(final QQMsg revMsg, final QQGroup group) {
         System.out.println("sendMsg " + group);
-
-        // 组装QQ消息发送回去
-        QQMsg sendMsg = new QQMsg();
-        sendMsg.setGroup(group);                                // QQ好友UIN
-        sendMsg.setType(QQMsg.Type.GROUP_MSG);              // 发送类型为好友
-        // QQ内容
-        sendMsg.addContentItem(new TextItem("hello from iqq: https://github.com/im-qq")); // 添加文本内容
-        sendMsg.addContentItem(new FaceItem(74));           // QQ id为0的表情
-        sendMsg.addContentItem(new FontItem());             // 使用默认字体
-        mClient.sendMsg(sendMsg, null);                     // 调用接口发送消息
+        Map<String, String> params = new HashMap<String, String>();
+        final QQUser user = revMsg.getFrom();
+        params.put("type", "buddy");
+        params.put("nickname", user.getNickname());
+        params.put("qq", Long.toString(user.getQQ()));
+        params.put("msg", revMsg.getText());
+        mClient.httpGet("http://192.168.2.122/webqq/recv.php", params, new QQActionListener() {
+			
+			@Override
+			public void onActionEvent(QQActionEvent event) {
+				// TODO Auto-generated method stub
+				System.out.println(event.getType());
+				System.out.println(event.getTarget());
+				if (!event.getType().equals(QQActionEvent.Type.EVT_OK)) {
+					return;
+				}
+				try {
+					String response = event.getTarget().toString();
+					System.out.println(response);
+					JSONObject obj = new JSONObject(response);
+					if (obj.getString("cmd").equals("send_buddy")) {
+				        // 组装QQ消息发送回去
+				        QQMsg sendMsg = new QQMsg();
+				        sendMsg.setGroup(group);                                // QQ好友UIN
+				        sendMsg.setType(revMsg.getType());              // 发送类型为好友
+				        // QQ内容
+				        sendMsg.addContentItem(new TextItem(obj.getString("msg"))); // 添加文本内容
+//				        sendMsg.addContentItem(new FaceItem(74));           // QQ id为0的表情
+				        sendMsg.addContentItem(new FontItem());             // 使用默认字体
+				        mClient.sendMsg(sendMsg, null);                     // 调用接口发送消息
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
     }
 
-    public static void sendDiscuz(QQDiscuz discuz) {
+    public static void sendDiscuz(QQMsg revMsg, QQDiscuz discuz) {
         System.out.println("sendMsg " + discuz);
 
         // 组装QQ消息发送回去
@@ -136,7 +194,7 @@ public class QRcodeLoginTest {
         sendMsg.setDiscuz(discuz);                                // QQ好友UIN
         sendMsg.setType(QQMsg.Type.DISCUZ_MSG);              // 发送类型为好友
         // QQ内容
-        sendMsg.addContentItem(new TextItem("hello from iqq: https://github.com/im-qq")); // 添加文本内容
+        sendMsg.addContentItem(new TextItem("hello world")); // 添加文本内容
         sendMsg.addContentItem(new FaceItem(74));           // QQ id为0的表情
         sendMsg.addContentItem(new FontItem());             // 使用默认字体
         mClient.sendMsg(sendMsg, null);                     // 调用接口发送消息

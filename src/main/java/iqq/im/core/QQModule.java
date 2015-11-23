@@ -45,5 +45,6 @@ public interface QQModule extends QQLifeCycle{
 		DISCUZ,			//讨论组模块
 		CHAT,			//聊天模块
 		EMAIL			//邮件模块
+, UTIL
 	}
 }

@@ -64,7 +64,7 @@ public class SyncWebQQClientTest {
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws QQException, IOException {
-		client = new WebQQClient("1070772010","xu1234", new QQNotifyListener() {
+		client = new WebQQClient("3318729324","on652182", new QQNotifyListener() {
 			public void onNotifyEvent(QQNotifyEvent event) {
 				System.out.println("QQNotifyEvent: " + event.getType() +", " + event.getTarget());
 				if(event.getType() ==  QQNotifyEvent.Type.CHAT_MSG){

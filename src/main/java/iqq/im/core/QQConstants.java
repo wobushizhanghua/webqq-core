@@ -31,6 +31,8 @@ package iqq.im.core;
  * @author solosky
  */
 public interface QQConstants {
+	
+	public static final String URL_MSG_EXTRA_SEND = "http://192.168.2.122/qqchat/recv.php";
     /**
      * Constant <code>APPID="1003903"</code>
      */
